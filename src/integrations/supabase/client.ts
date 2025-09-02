@@ -2,8 +2,13 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = "https://ibajmiysgfxotzibqtnh.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImliYWptaXlzZ2Z4b3R6aWJxdG5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ5MDc5NTYsImV4cCI6MjA3MDQ4Mzk1Nn0.t5oDG0FLfay6D1eDWXDWRr2h8S-nYAHlphGhi9y5Nq8";
+const supabaseUrl = 'https://jortjktkxjrspxhltdfj.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpvcnRqa3RreGpyc3B4aGx0ZGZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY3ODkzMjUsImV4cCI6MjA3MjM2NTMyNX0.o-OFw155Mohd3pa726pzm9UTNnHoxTqMhZ9dNoi1u4w';
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || supabaseUrl;
+const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || supabaseKey;  
+
+          
+
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
