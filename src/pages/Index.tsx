@@ -16,6 +16,15 @@ const Landing = () => {
             <Button asChild variant="outline">
               <a href="#features">Learn more</a>
             </Button>
+            <Button asChild variant="outline">
+              <Link to="/admin">Admin Dashboard</Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link to="/client">Client Dashboard</Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link to="/sub-user">Sub-user Dashboard</Link>
+            </Button>
           </div>
         </div>
       </header>
