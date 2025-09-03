@@ -1,8 +1,18 @@
 import AppShell from "./AppShell";
-import { Routes, Route, Link } from "react-router-dom";
+import { Routes, Route, Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/lib/supabaseClient";
+import { logAction } from "@/utils/audit";
 
 const Landing = () => {
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    await logAction('user_logout');
+    navigate("/auth");
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="hero-spotlight border-b">
@@ -24,6 +34,9 @@ const Landing = () => {
             </Button>
             <Button asChild variant="outline">
               <Link to="/sub-user">Sub-user Dashboard</Link>
+            </Button>
+            <Button variant="outline" onClick={handleSignOut}>
+              Sign Out
             </Button>
           </div>
         </div>
@@ -61,4 +74,3 @@ const Index = () => {
 };
 
 export default Index;
-
