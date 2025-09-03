@@ -7,6 +7,7 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useNavigate } from "react-router-dom";
 import { logAction } from "@/utils/audit";
+import { FcGoogle } from "react-icons/fc";
 
 export default function Auth() {
   const [loading, setLoading] = useState(false);
@@ -38,6 +39,23 @@ export default function Auth() {
       await logAction('user_signup');
     }
     setLoading(false);
+  };
+
+  const handleGoogleAuth = async () => {
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin,
+      },
+    });
+    
+    if (error) {
+      alert(error.message);
+      setLoading(false);
+    } else {
+      await logAction('google_auth_attempt');
+    }
   };
 
   return (
@@ -79,6 +97,26 @@ export default function Auth() {
                   <Button type="submit" className="w-full" disabled={loading}>
                     {loading ? "Loading..." : "Login"}
                   </Button>
+                  <div className="relative my-4">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-background px-2 text-muted-foreground">
+                        Or continue with
+                      </span>
+                    </div>
+                  </div>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    className="w-full flex items-center gap-2"
+                    onClick={handleGoogleAuth}
+                    disabled={loading}
+                  >
+                    <FcGoogle className="h-4 w-4" />
+                    Continue with Google
+                  </Button>
                 </div>
               </form>
             </CardContent>
@@ -115,6 +153,26 @@ export default function Auth() {
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>
                     {loading ? "Loading..." : "Sign Up"}
+                  </Button>
+                  <div className="relative my-4">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-background px-2 text-muted-foreground">
+                        Or continue with
+                      </span>
+                    </div>
+                  </div>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    className="w-full flex items-center gap-2"
+                    onClick={handleGoogleAuth}
+                    disabled={loading}
+                  >
+                    <FcGoogle className="h-4 w-4" />
+                    Continue with Google
                   </Button>
                 </div>
               </form>
