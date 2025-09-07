@@ -39,7 +39,18 @@ serve(async (req) => {
 
     const tokenRes = await fetch(tokenUrl)
     if (!tokenRes.ok) throw new Error('Failed to fetch access token')
-    const tokenData = await tokenRes.json()
+    const shortLivedTokenData = await tokenRes.json()
+
+    // 2a. Exchange short-lived token for a long-lived token
+    const longLivedTokenUrl = new URL('https://graph.facebook.com/v18.0/oauth/access_token');
+    longLivedTokenUrl.searchParams.set('grant_type', 'fb_exchange_token');
+    longLivedTokenUrl.searchParams.set('client_id', FACEBOOK_APP_ID);
+    longLivedTokenUrl.searchParams.set('client_secret', FACEBOOK_APP_SECRET);
+    longLivedTokenUrl.searchParams.set('fb_exchange_token', shortLivedTokenData.access_token);
+
+    const longLivedTokenRes = await fetch(longLivedTokenUrl);
+    if (!longLivedTokenRes.ok) throw new Error('Failed to exchange for long-lived token');
+    const longLivedTokenData = await longLivedTokenRes.json();
 
     // 3. Get user_id from the JWT in the request headers
     const authHeader = req.headers.get('Authorization')
@@ -48,7 +59,7 @@ serve(async (req) => {
     const payload = decode(jwt)
     const userId = payload[1].sub
 
-    // 4. Store the credentials in Supabase
+    // 4. Store the long-lived credentials in Supabase
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       global: { headers: { Authorization: `Bearer ${jwt}` } },
     })
@@ -56,14 +67,16 @@ serve(async (req) => {
     const { error } = await supabase.from('user_credentials').upsert({
       user_id: userId,
       provider: 'facebook',
-      access_token: tokenData.access_token,
-      expires_at: new Date(Date.now() + tokenData.expires_in * 1000).toISOString(),
-    })
+      access_token: longLivedTokenData.access_token,
+      // Long-lived tokens on web last about 60 days
+      expires_at: new Date(Date.now() + (longLivedTokenData.expires_in || 60 * 24 * 3600) * 1000).toISOString(),
+    }, { onConflict: 'user_id, provider' })
+
 
     if (error) throw error
 
-    // 5. Redirect user to the integrations page
-    const redirectUrl = new URL('/integrations', url.origin)
+    // 5. Redirect user to the new Facebook setup page to select an Ad Account
+    const redirectUrl = new URL('/integrations/facebook/setup', url.origin)
     return new Response(null, {
       status: 302,
       headers: {
