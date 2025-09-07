@@ -8,6 +8,8 @@ import Integrations from "./Integrations";
 import Attribution from "./Attribution";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
+import FacebookSetup from "./FacebookSetup";
+import GoogleSetup from "./GoogleSetup";
 
 const AppShell = () => {
   return (
@@ -24,6 +26,8 @@ const AppShell = () => {
               <Route path="/reports" element={<Reports />} />
               <Route path="/attribution" element={<Attribution />} />
               <Route path="/integrations" element={<Integrations />} />
+              <Route path="/integrations/facebook/setup" element={<FacebookSetup />} />
+              <Route path="/integrations/google/setup" element={<GoogleSetup />} />
             </Routes>
           </main>
         </div>

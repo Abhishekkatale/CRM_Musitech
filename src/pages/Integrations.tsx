@@ -14,26 +14,31 @@ const Integrations = () => {
     queryKey: ['connections'],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return null;
+      if (!user) return {};
 
       const { data, error } = await supabase
         .from('user_credentials')
-        .select('provider')
+        .select('provider, provider_specific_id')
         .eq('user_id', user.id);
 
       if (error) throw new Error(error.message);
 
-      const connectedProviders = data.map(c => c.provider);
-      return {
-        facebook: connectedProviders.includes('facebook'),
-        google: connectedProviders.includes('google'),
-      };
+      const status = { facebook: 'disconnected', google: 'disconnected' };
+      data.forEach(cred => {
+        if (cred.provider === 'facebook' || cred.provider === 'google') {
+          status[cred.provider] = cred.provider_specific_id ? 'connected' : 'setup_required';
+        }
+      });
+      return status;
     },
   });
 
-  const handleConnect = (provider) => {
-    // The user will be redirected to the Supabase Edge Function
-    window.location.href = `/functions/v1/${provider}-oauth`;
+  const handleConnect = (provider, setupPath) => {
+    if (setupPath) {
+      window.location.href = setupPath;
+    } else {
+      window.location.href = `/functions/v1/${provider}-oauth`;
+    }
   };
 
   const disconnectMutation = useMutation({
@@ -80,14 +85,20 @@ const Integrations = () => {
             <CardDescription>Account metrics and campaign performance (read-only).</CardDescription>
           </CardHeader>
           <CardContent className="flex items-center justify-between">
-            {isLoading ? (
-              <p>Loading...</p>
-            ) : connections?.facebook ? (
+            {isLoading && <p>Loading...</p>}
+            {connections?.facebook === 'connected' && (
               <>
                 <Badge variant="secondary">Connected</Badge>
                 <Button variant="destructive" size="sm" onClick={() => disconnectMutation.mutate('facebook')}>Disconnect</Button>
               </>
-            ) : (
+            )}
+            {connections?.facebook === 'setup_required' && (
+              <>
+                <Badge variant="yellow">Setup Required</Badge>
+                <Button onClick={() => handleConnect('facebook', '/integrations/facebook/setup')}>Complete Setup</Button>
+              </>
+            )}
+            {connections?.facebook === 'disconnected' && (
               <Button onClick={() => handleConnect('facebook')}>Connect</Button>
             )}
           </CardContent>
@@ -99,14 +110,20 @@ const Integrations = () => {
             <CardDescription>Search & Display campaign stats (read-only).</CardDescription>
           </CardHeader>
           <CardContent className="flex items-center justify-between">
-            {isLoading ? (
-              <p>Loading...</p>
-            ) : connections?.google ? (
+            {isLoading && <p>Loading...</p>}
+            {connections?.google === 'connected' && (
               <>
                 <Badge variant="secondary">Connected</Badge>
                 <Button variant="destructive" size="sm" onClick={() => disconnectMutation.mutate('google')}>Disconnect</Button>
               </>
-            ) : (
+            )}
+            {connections?.google === 'setup_required' && (
+              <>
+                <Badge variant="yellow">Setup Required</Badge>
+                <Button onClick={() => handleConnect('google', '/integrations/google/setup')}>Complete Setup</Button>
+              </>
+            )}
+            {connections?.google === 'disconnected' && (
               <Button onClick={() => handleConnect('google')}>Connect</Button>
             )}
           </CardContent>

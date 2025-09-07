@@ -4,9 +4,9 @@ Congratulations on building your CRM! To connect it with Facebook Ads and Google
 
 ## How It Works
 
-Your application uses Supabase Edge Functions to securely connect to the ad platforms. These functions read their credentials from the "Secrets" section of your Supabase project settings. You should **never** put your real secrets directly into the code or the `.env.local` file.
+Your application uses Supabase Edge Functions to securely connect to the ad platforms. These functions read their credentials from the "Secrets" section of your Supabase project settings. You should **never** put your real secrets directly into the code.
 
-The `.env.local` file in this project contains placeholder values. You need to replace them with real secrets in your Supabase project dashboard.
+For local development, you can use the `.env.local` file. For production, you must set these in your Supabase project dashboard.
 
 ## Step 1: Set Supabase Secrets
 
@@ -18,6 +18,7 @@ The `.env.local` file in this project contains placeholder values. You need to r
     *   `FACEBOOK_APP_SECRET`: Your Facebook App Secret.
     *   `GOOGLE_ID`: Your Google Client ID.
     *   `GOOGLE_SECRET`: Your Google Client Secret.
+    *   `GOOGLE_DEVELOPER_TOKEN`: Your Google Ads API Developer Token.
     *   `SUPABASE_JWT_SECRET`: A long, random, and secret string (at least 32 characters). You can generate one from a password generator.
 
 ## Step 2: Get Facebook Ads Credentials
@@ -36,23 +37,20 @@ The `.env.local` file in this project contains placeholder values. You need to r
         ```
         (Replace `<YOUR_SUPABASE_PROJECT_ID>` with your actual project ID from Supabase).
 
-3.  **Configure your Ad Account ID:**
-    *   After you connect your Facebook account on the "Integrations" page, you need to tell the application which Ad Account to use.
-    *   Go to your project on [Supabase.io](https://supabase.io).
-    *   Navigate to the **Table Editor** and open the `user_credentials` table.
-    *   Find the row for your user and the `facebook` provider.
-    *   In the `provider_specific_id` column, you need to enter your Facebook Ad Account ID.
-    *   To find your Ad Account ID, go to your [Facebook Ads Manager](https://www.facebook.com/adsmanager/). In the URL, you will see `act=...`. Your ID is the number that follows, like `act_123456789`. You must enter the full `act_...` string.
-
 ## Step 3: Get Google Ads Credentials
 
-1.  **Create a Google Cloud Project:**
+1.  **Get a Developer Token:**
+    *   You need a Google Ads Manager Account to get a developer token. If you don't have one, create one.
+    *   Inside your Manager Account, go to **Tools & Settings** > **API Center**.
+    *   Your Developer Token will be listed there. Copy it and add it to your Supabase secrets as `GOOGLE_DEVELOPER_TOKEN`.
+
+2.  **Create a Google Cloud Project:**
     *   Go to the [Google Cloud Console](https://console.cloud.google.com/).
     *   Create a new project.
     *   In the navigation menu, go to **APIs & Services** > **Enabled APIs & services**.
     *   Click **+ ENABLE APIS AND SERVICES** and search for "Google Ads API". Enable it.
 
-2.  **Create OAuth Credentials:**
+3.  **Create OAuth Credentials:**
     *   Go to **APIs & Services** > **Credentials**.
     *   Click **+ CREATE CREDENTIALS** and choose "OAuth client ID".
     *   Select "Web application" as the application type.
@@ -64,4 +62,4 @@ The `.env.local` file in this project contains placeholder values. You need to r
 
 ## Step 4: You're Ready!
 
-Once you have set all the secrets in your Supabase project, you can deploy your application and everything should work. When you go to the "Integrations" page, you can now connect your accounts. The dashboard will then show the live data.
+Once you have set all the secrets in your Supabase project, you can run the application. When you go to the "Integrations" page, you can now connect your accounts. After authorizing, you will be prompted to select the specific Ad Account you want to sync. The dashboard will then show the live data.
