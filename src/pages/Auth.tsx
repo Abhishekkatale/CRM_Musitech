@@ -7,8 +7,13 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { logLogin } from "@/utils/audit";
+import { supabase } from "@/integrations/supabase/client";
 import { FcGoogle } from "react-icons/fc";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+
+type ProfileData = {
+  role: 'admin' | 'client' | 'subuser';
+};
 
 export default function Auth() {
   const [loading, setLoading] = useState(false);
@@ -19,16 +24,14 @@ export default function Auth() {
   const { signIn, profile } = useAuth();
 
   // Redirect if already authenticated
+  // This is handled by the ProtectedRoute component
   if (profile) {
-    const roleDashboard = {
-      admin: "/admin",
-      client: "/client", 
-      subuser: "/dashboard"
-    };
-    const redirectTo = roleDashboard[profile.role] || "/dashboard";
-    console.log("Redirecting to:", redirectTo);
-    navigate(redirectTo, { replace: true });
-    return null;
+    // Show loading state while redirecting
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+      </div>
+    );
   }
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -36,16 +39,44 @@ export default function Auth() {
     setLoading(true);
     setError("");
 
-    const { error: signInError } = await signIn(email, password);
-    
-    if (signInError) {
-      setError(signInError.message);
-    } else {
-      await logLogin(email);
-      // Navigation will be handled by the AuthProvider
+    try {
+      // Basic validation
+      if (!email || !password) {
+        setError('Please enter both email and password');
+        return;
+      }
+
+      const { error: signInError } = await signIn(email, password);
+      
+      if (signInError) {
+        // More user-friendly error messages
+        let errorMessage = 'Failed to sign in. Please check your credentials.';
+        if (signInError.message.includes('Invalid login credentials')) {
+          errorMessage = 'Invalid email or password. Please try again.';
+        } else if (signInError.message.includes('Email not confirmed')) {
+          errorMessage = 'Please verify your email before signing in.';
+        }
+        setError(errorMessage);
+        return;
+      }
+      
+      // Log the successful login attempt
+      try {
+        await logLogin(email);
+      } catch (logError) {
+        console.error('Error logging login:', logError);
+        // Don't fail the login if logging fails
+      }
+      
+      // The AuthProvider will handle the redirection based on the user's role
+      // So we don't need to handle it here
+      
+    } catch (err) {
+      console.error('Login error:', err);
+      setError('An unexpected error occurred. Please try again.');
+    } finally {
+      setLoading(false);
     }
-    
-    setLoading(false);
   };
 
   const handleGoogleAuth = async () => {

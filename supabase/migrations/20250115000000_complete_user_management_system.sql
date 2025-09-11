@@ -353,3 +353,13 @@ COMMENT ON TABLE public.audit_logs IS
   'Comprehensive audit trail for all user actions';
 COMMENT ON TABLE public.user_sessions IS
   'JWT refresh token management for secure sessions';
+
+-- src/utils/supabaseClient.ts
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+import { supabase } from '../utils/supabaseClient';

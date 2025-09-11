@@ -27,7 +27,7 @@ export const getCurrentUser = async (): Promise<{ data?: UserWithProfile | null;
       .select(`
         *,
         clients (*),
-        subusers (*)
+        subusers!subusers_profile_id_fkey (*)
       `)
       .eq('auth_user_id', user.id)
       .single();

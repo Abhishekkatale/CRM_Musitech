@@ -1,5 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQueries } from "@tanstack/react-query";
+import { Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
@@ -47,6 +48,31 @@ const fetchMetrics = async (provider: string, session: any) => {
 
 const Dashboard = () => {
   const { session, profile, loading: authLoading } = useAuth();
+  
+  // Show loading state while authenticating
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
+  
+  // Redirect to login if not authenticated
+  if (!session || !profile) {
+    return <Navigate to="/auth" replace />;
+  }
+  
+  console.log('Dashboard rendered with profile:', profile);
+  
+  // Debug logging
+  console.log('Dashboard render:', { 
+    authLoading, 
+    hasSession: !!session,
+    hasProfile: !!profile,
+    profileRole: profile?.role
+  });
+
   const [selectedMetric, setSelectedMetric] = useState<{
     title: string;
     value: string | number;
@@ -100,13 +126,31 @@ const Dashboard = () => {
 
   // Show loading state
   if (isLoading) {
+    console.log('Dashboard loading...');
     return (
-      <div className="space-y-4 p-4">
-        <Skeleton className="h-32 w-full" />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-32" />
+      <div className="p-8">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
+            <Skeleton key={i} className="h-32 rounded-lg" />
           ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Debug: Check if we have the necessary data
+  if (!profile) {
+    console.error('No profile data available');
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center p-8">
+          <h2 className="text-2xl font-bold mb-4">Authentication Required</h2>
+          <p className="text-muted-foreground mb-4">
+            You need to be logged in to view this page.
+          </p>
+          <Button onClick={() => window.location.href = '/login'}>
+            Go to Login
+          </Button>
         </div>
       </div>
     );
