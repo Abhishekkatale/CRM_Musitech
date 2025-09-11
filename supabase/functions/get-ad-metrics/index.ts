@@ -25,7 +25,7 @@ serve(async (req) => {
     // 3. Retrieve the credentials from the database
     const { data: credentials, error: credsError } = await supabase
       .from('user_credentials')
-      .select('access_token, provider_specific_id')
+      .select('access_token, refresh_token, provider_specific_id')
       .eq('user_id', userId)
       .eq('provider', provider)
       .single()
@@ -53,26 +53,69 @@ serve(async (req) => {
       }
       const apiData = await apiRes.json();
 
-      // The FB API returns an array of data points. We'll aggregate them.
       const summary = apiData.data.reduce((acc, item) => {
-        acc.spend += parseFloat(item.spend || 0);
-        acc.impressions += parseInt(item.impressions || 0, 10);
-        // Note: CTR and Conversions might need more complex aggregation
+        acc.spend = (acc.spend || 0) + parseFloat(item.spend || 0);
+        acc.impressions = (acc.impressions || 0) + parseInt(item.impressions || 0, 10);
+        return acc;
+      }, {});
+
+      metrics = summary;
+    } else if (provider === 'google') {
+      const GOOGLE_CLIENT_ID = Deno.env.get('GOOGLE_ID')
+      const GOOGLE_CLIENT_SECRET = Deno.env.get('GOOGLE_SECRET')
+      const GOOGLE_DEVELOPER_TOKEN = Deno.env.get('GOOGLE_DEVELOPER_TOKEN')
+
+      if (!credentials.refresh_token) throw new Error('Missing Google refresh token.');
+      if (!credentials.provider_specific_id) throw new Error('Missing Google Ads Customer ID.');
+
+      // 1. Use refresh token to get a new access token
+      const tokenUrl = 'https://oauth2.googleapis.com/token';
+      const tokenParams = new URLSearchParams({
+        client_id: GOOGLE_CLIENT_ID,
+        client_secret: GOOGLE_CLIENT_SECRET,
+        refresh_token: credentials.refresh_token,
+        grant_type: 'refresh_token',
+      });
+      const tokenRes = await fetch(tokenUrl, { method: 'POST', body: tokenParams });
+      if (!tokenRes.ok) throw new Error('Failed to refresh Google access token');
+      const tokenData = await tokenRes.json();
+      const accessToken = tokenData.access_token;
+
+      // 2. Make a request to the Google Ads API
+      const customerId = credentials.provider_specific_id.replace(/-/g, ''); // Remove dashes for the API
+      const apiUrl = `https://googleads.googleapis.com/v16/customers/${customerId}/googleAds:searchStream`;
+      const gaqlQuery = "SELECT metrics.cost_micros, metrics.impressions FROM campaign WHERE segments.date DURING LAST_30_DAYS";
+
+      const apiRes = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+          'developer-token': GOOGLE_DEVELOPER_TOKEN,
+          'login-customer-id': customerId
+        },
+        body: JSON.stringify({ query: gaqlQuery }),
+      });
+
+      if (!apiRes.ok) {
+        const errorText = await apiRes.text();
+        console.error("Google Ads API Error:", errorText);
+        throw new Error('Failed to fetch data from Google Ads API.');
+      }
+
+      const apiData = await apiRes.json();
+
+      // The response is an array of results, each containing a "results" array.
+      // We need to aggregate the metrics from all of them.
+      const summary = apiData.reduce((acc, result) => {
+        result.results.forEach(item => {
+          acc.spend = (acc.spend || 0) + (parseInt(item.metrics.costMicros, 10) / 1000000);
+          acc.impressions = (acc.impressions || 0) + parseInt(item.metrics.impressions, 10);
+        });
         return acc;
       }, { spend: 0, impressions: 0 });
 
       metrics = summary;
-    } else if (provider === 'google') {
-      // In a real application, you would use the Google Ads API client library
-      // and the refresh_token to get a new access_token if the old one is expired.
-      // Then you would construct a GAQL query to fetch the metrics.
-      // For this example, we will return hardcoded data to simulate the API call.
-      metrics = {
-        spend: 5500.75,
-        impressions: 350000,
-        // Google Ads API provides clicks and cost_micros, so CTR and conversions
-        // would need to be calculated.
-      };
     }
 
     return new Response(JSON.stringify({ data: metrics }), {

@@ -72,8 +72,8 @@ serve(async (req) => {
 
     if (error) throw error
 
-    // 5. Redirect to integrations page
-    const redirectUrl = new URL('/integrations', url.origin)
+    // 5. Redirect to google setup page
+    const redirectUrl = new URL('/integrations/google/setup', url.origin)
     return new Response(null, {
       status: 302,
       headers: {
