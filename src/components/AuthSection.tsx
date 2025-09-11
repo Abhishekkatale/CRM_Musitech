@@ -1,7 +1,7 @@
 // filepath: /home/abhishek/Desktop/Musitech_CRM/musitech-launchpad/src/components/AuthSection.tsx
 
 import { useEffect, useState } from "react";
-import { supabase } from "../lib/supabaseClient";
+import { supabase } from "@/integrations/supabase/client";
 import { LogOut } from "lucide-react";
 
 export const AuthSection = () => {
