@@ -1,17 +1,28 @@
 import AppShell from "./AppShell";
-import { Routes, Route, Link, useNavigate } from "react-router-dom";
+import { Routes, Route, Link, useNavigate, Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/lib/supabaseClient";
-import { logAction } from "@/utils/audit";
+import { useAuth } from "@/hooks/useAuth";
+import { logLogout } from "@/utils/audit";
 
 const Landing = () => {
   const navigate = useNavigate();
+  const { signOut, profile } = useAuth();
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    await logAction('user_logout');
+    await logLogout();
+    await signOut();
     navigate("/auth");
   };
+
+  // Redirect to appropriate dashboard based on role
+  if (profile) {
+    const roleDashboard = {
+      admin: "/admin",
+      client: "/client",
+      subuser: "/subuser"
+    };
+    return <Navigate to={roleDashboard[profile.role] || "/dashboard"} replace />;
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -33,7 +44,7 @@ const Landing = () => {
               <Link to="/client">Client Dashboard</Link>
             </Button>
             <Button asChild variant="outline">
-              <Link to="/sub-user">Sub-user Dashboard</Link>
+              <Link to="/subuser">Subuser Dashboard</Link>
             </Button>
             <Button variant="outline" onClick={handleSignOut}>
               Sign Out
