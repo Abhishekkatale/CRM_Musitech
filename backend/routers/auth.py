@@ -9,10 +9,8 @@ from utils.auth import AuthUtils
 router = APIRouter(prefix="/auth", tags=["authentication"])
 security = HTTPBearer()
 
-# Dependency to get database
-async def get_db():
-    # This will be injected by the main app
-    pass
+# Import database dependency
+from dependencies import get_database
 
 # Dependency to get current user from JWT token
 async def get_current_user(
