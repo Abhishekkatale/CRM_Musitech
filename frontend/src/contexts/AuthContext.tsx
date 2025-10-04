@@ -52,13 +52,13 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [client, setClient] = useState<Client | null>(null);
-  const [subuser, setSubuser] = useState<Subuser | null>(null);
+  const [user, setUser] = useState<BackendUser | null>(null);
+  const [profile, setProfile] = useState<BackendUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  
+  // Get backend URL from environment
+  const backendUrl = import.meta.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
 
   const fetchUserProfile = useCallback(async (userId: string) => {
     console.log('fetchUserProfile: Starting for user ID:', userId);
