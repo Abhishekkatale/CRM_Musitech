@@ -84,6 +84,24 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+@app.on_event("startup")
+async def startup_db_client():
+    """Initialize database and create admin user"""
+    try:
+        # Test database connection
+        await db.command("ping")
+        logger.info("Connected to MongoDB successfully")
+        
+        # Create admin user if not exists
+        auth_service = AuthService(db)
+        admin_user = await auth_service.create_admin_user()
+        logger.info(f"Admin user ensured: {admin_user.email}")
+        
+    except Exception as e:
+        logger.error(f"Database connection failed: {e}")
+        raise e
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
+    logger.info("Database connection closed")
