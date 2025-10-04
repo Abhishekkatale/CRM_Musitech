@@ -152,10 +152,10 @@
 
 ## test_plan:
   current_focus:
-    - "Fix Supabase RLS policies"
-    - "Test authentication flow end-to-end"
+    - "Backend authentication system testing completed"
+    - "Frontend authentication integration needs testing"
   stuck_tasks:
-    - "Supabase Database Configuration"
+    - "User Authentication System" (frontend)
   test_all: false
   test_priority: "high_first"
 
