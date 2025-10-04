@@ -180,8 +180,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     if (profile.role === 'client') return true;
 
     // Subusers have permissions based on their assigned permissions
-    if (profile.role === 'subuser' && subuser) {
-      const permissions = subuser.permissions as Record<string, string[]>;
+    if (profile.role === 'subuser' && profile.permissions) {
+      const permissions = profile.permissions as Record<string, string[]>;
       return permissions[module]?.includes(action) || false;
     }
 
