@@ -219,10 +219,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const value: UserContext = {
     profile,
-    client,
-    subuser,
     user,
-    session,
     loading,
     error,
     signIn,
