@@ -193,61 +193,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const isSubuser = () => profile?.role === 'subuser';
 
   useEffect(() => {
-    // Get initial session
+    // Initialize auth from stored token
     console.log('AuthProvider: Getting initial session...');
     
     const initializeAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        console.log('AuthProvider: Initial session retrieved:', session ? 'valid session' : 'no session');
+        const token = localStorage.getItem('auth_token');
         
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          console.log('AuthProvider: Fetching user profile for user:', session.user.id);
-          await fetchUserProfile(session.user.id);
+        if (token) {
+          console.log('AuthProvider: Found stored token, fetching profile');
+          await fetchUserProfile(token);
         } else {
-          console.log('AuthProvider: No user session, setting loading to false');
+          console.log('AuthProvider: No stored token found, setting loading to false');
           setLoading(false);
         }
       } catch (error) {
-        console.error('AuthProvider: Error getting initial session:', error);
+        console.error('AuthProvider: Error initializing auth:', error);
+        localStorage.removeItem('auth_token');
         setLoading(false);
       }
     };
 
     initializeAuth();
-
-    // Listen for auth changes
-    console.log('AuthProvider: Setting up auth state change listener');
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed. Event:', event, 'Has session:', !!session);
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        console.log('User authenticated, fetching profile for:', session.user.id);
-        try {
-          await fetchUserProfile(session.user.id);
-          // Update last login
-          await supabase.rpc('update_last_login');
-          console.log('Last login updated');
-        } catch (error) {
-          console.error('Error in auth state change handler:', error);
-        }
-      } else {
-        console.log('No user session, clearing profile data');
-        setProfile(null);
-        setClient(null);
-        setSubuser(null);
-        setLoading(false);
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
   }, [fetchUserProfile]);
 
   const value: UserContext = {
