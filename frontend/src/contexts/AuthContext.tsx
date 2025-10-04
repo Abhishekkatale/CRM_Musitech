@@ -58,7 +58,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [error, setError] = useState<Error | null>(null);
   
   // Get backend URL from environment
-  const backendUrl = import.meta.env.VITE_REACT_APP_BACKEND_URL || import.meta.env.REACT_APP_BACKEND_URL;
+  const backendUrl = import.meta.env.VITE_REACT_APP_BACKEND_URL || 'https://auth-rescue-2.preview.emergentagent.com';
 
   const fetchUserProfile = useCallback(async (token: string) => {
     console.log('fetchUserProfile: Starting with token');
