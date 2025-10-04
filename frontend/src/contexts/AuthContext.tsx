@@ -160,13 +160,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const refreshSession = async () => {
     try {
-      const { data, error } = await supabase.auth.refreshSession();
-      if (error) throw error;
-      if (data?.session?.user) {
-        await fetchUserProfile(data.session.user.id);
+      const token = localStorage.getItem('auth_token');
+      if (token) {
+        await fetchUserProfile(token);
       }
     } catch (error) {
       console.error('Error refreshing session:', error);
+      localStorage.removeItem('auth_token');
     }
   };
 
