@@ -1,24 +1,31 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
-import { User, Session, AuthError } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
-import { Tables } from '@/integrations/supabase/types';
 
-// Define the profile type with email and role
-interface UserProfile extends Tables<'profiles'> {
+// Backend API User types
+interface BackendUser {
+  id: string;
   email: string;
   role: 'admin' | 'client' | 'subuser';
+  is_active: boolean;
+  created_at: string;
+  last_login: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  company: string | null;
+  phone: string | null;
+  client_settings: Record<string, any> | null;
+  permissions: Record<string, any> | null;
 }
 
-type Profile = Tables<'profiles'>;
-type Client = Tables<'clients'>;
-type Subuser = Tables<'subusers'>;
+interface LoginResponse {
+  access_token: string;
+  token_type: string;
+  expires_in: number;
+  user: BackendUser;
+}
 
 interface UserContext {
-  profile: Profile | null;
-  client: Client | null;
-  subuser: Subuser | null;
-  user: User | null;
-  session: Session | null;
+  profile: BackendUser | null;
+  user: BackendUser | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   error: Error | null;
