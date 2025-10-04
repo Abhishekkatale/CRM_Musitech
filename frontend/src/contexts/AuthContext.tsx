@@ -148,12 +148,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const signOut = async () => {
     try {
-      await supabase.auth.signOut();
+      localStorage.removeItem('auth_token');
       setUser(null);
-      setSession(null);
       setProfile(null);
-      setClient(null);
-      setSubuser(null);
+      setError(null);
+      console.log('User signed out successfully');
     } catch (error) {
       console.error('Error signing out:', error);
     }
