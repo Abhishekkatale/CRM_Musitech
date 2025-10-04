@@ -105,42 +105,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setError(null);
     
     try {
-      // 1. Sign in with email and password
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password: password.trim(),
+      const response = await fetch(`${backendUrl}/api/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email.trim(),
+          password: password.trim(),
+        }),
       });
 
-      if (signInError) {
-        console.error('Authentication error:', signInError);
-        setError(new Error(signInError.message));
-        return { error: signInError };
-      }
-
-      console.log('Authentication successful, user ID:', data.user?.id);
-      
-      if (!data.user) {
-        const error = new Error('No user data returned from authentication');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ detail: 'Authentication failed' }));
+        const error = new Error(errorData.detail || 'Invalid email or password');
         setError(error);
         return { error };
       }
 
-      // 2. Get the session
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      const loginData: LoginResponse = await response.json();
+      console.log('Authentication successful for user:', loginData.user.email);
       
-      if (sessionError || !session) {
-        const error = new Error(sessionError?.message || 'No active session found');
-        setError(error);
-        return { error };
-      }
-
-      // 3. Update session and user state
-      setSession(session);
-      setUser(data.user);
-
-      // 4. Fetch user profile
-      console.log('Fetching user profile...');
-      await fetchUserProfile(data.user.id);
+      // Store token in localStorage
+      localStorage.setItem('auth_token', loginData.access_token);
+      
+      // Update state
+      setUser(loginData.user);
+      setProfile(loginData.user);
       
       console.log('Sign in completed successfully');
       return { error: null };
