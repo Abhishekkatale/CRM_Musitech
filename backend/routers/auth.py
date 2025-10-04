@@ -71,7 +71,7 @@ async def get_me(current_user: UserResponse = Depends(get_current_user)):
     return current_user
 
 @router.post("/create-admin", response_model=UserResponse)
-async def create_admin(db: AsyncIOMotorDatabase = Depends(get_db)):
+async def create_admin(db: AsyncIOMotorDatabase = Depends(get_database)):
     """Create default admin user (for setup purposes)"""
     auth_service = AuthService(db)
     return await auth_service.create_admin_user()
