@@ -54,7 +54,7 @@ async def login(
 @router.post("/register", response_model=UserResponse)
 async def register(
     user_data: UserCreate,
-    db: AsyncIOMotorDatabase = Depends(get_db)
+    db: AsyncIOMotorDatabase = Depends(get_database)
 ):
     """Register a new user"""
     auth_service = AuthService(db)
