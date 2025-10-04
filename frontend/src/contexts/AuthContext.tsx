@@ -60,82 +60,44 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Get backend URL from environment
   const backendUrl = import.meta.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
 
-  const fetchUserProfile = useCallback(async (userId: string) => {
-    console.log('fetchUserProfile: Starting for user ID:', userId);
+  const fetchUserProfile = useCallback(async (token: string) => {
+    console.log('fetchUserProfile: Starting with token');
     
-    if (!userId) {
-      console.error('No user ID provided to fetchUserProfile');
+    if (!token) {
+      console.error('No token provided to fetchUserProfile');
       return;
     }
 
     setLoading(true);
     
     try {
-      // 1. Fetch the user's profile
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('auth_user_id', userId)
-        .single();
-
-      if (profileError || !profileData) {
-        const error = profileError || new Error('No profile data found');
-        console.error('Error fetching profile:', error);
-        setError(new Error(profileError?.message || 'User profile not found'));
-        await supabase.auth.signOut(); // Sign out if profile not found
-        return;
-      }
-
-      console.log('Fetched profile data:', { 
-        id: profileData.id, 
-        role: (profileData as any).role,
-        email: (profileData as any).email
+      const response = await fetch(`${backendUrl}/api/auth/profile`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
       });
-      
-      // 2. Update profile state
-      setProfile(profileData);
 
-      // 3. Fetch role-specific data
-      if (profileData.role === 'client') {
-        const { data: clientData, error: clientError } = await supabase
-          .from('clients')
-          .select('*')
-          .eq('profile_id', profileData.id)
-          .maybeSingle();
-        
-        if (clientError) {
-          console.error('Error fetching client data:', clientError);
-          // Don't fail the login if client data fetch fails
-        }
-        
-        setClient(clientData || null);
-        setSubuser(null);
-        
-      } else if (profileData.role === 'subuser') {
-        const { data: subuserData, error: subuserError } = await supabase
-          .from('subusers')
-          .select('*')
-          .eq('profile_id', profileData.id)
-          .maybeSingle();
-        
-        if (subuserError) {
-          console.error('Error fetching subuser data:', subuserError);
-          // Don't fail the login if subuser data fetch fails
-        }
-        
-        setSubuser(subuserData || null);
-        setClient(null);
-      } else {
-        // For admin or other roles
-        setClient(null);
-        setSubuser(null);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ detail: 'Failed to fetch profile' }));
+        throw new Error(errorData.detail || `HTTP ${response.status}`);
       }
+
+      const userData: BackendUser = await response.json();
+      console.log('Fetched profile data:', userData);
+      
+      setProfile(userData);
+      setUser(userData);
     } catch (error) {
       console.error('Error in fetchUserProfile:', error);
+      setError(error instanceof Error ? error : new Error('Failed to fetch profile'));
+      // Clear stored token on profile fetch error
+      localStorage.removeItem('auth_token');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [backendUrl]);
 
   const signIn = async (email: string, password: string) => {
     console.log('Starting sign in for:', email);
