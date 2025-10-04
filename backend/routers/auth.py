@@ -15,7 +15,7 @@ from dependencies import get_database
 # Dependency to get current user from JWT token
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: AsyncIOMotorDatabase = Depends(get_db)
+    db: AsyncIOMotorDatabase = Depends(get_database)
 ) -> UserResponse:
     """Get current authenticated user from JWT token"""
     token = credentials.credentials
