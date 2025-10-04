@@ -1,7 +1,7 @@
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, Depends
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
-from motor.motor_asyncio import AsyncIOMotorClient
+from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 import os
 import logging
 from pathlib import Path
@@ -10,6 +10,10 @@ from typing import List
 import uuid
 from datetime import datetime
 
+# Import authentication modules
+from routers.auth import router as auth_router
+from services.auth_service import AuthService
+from dependencies import set_database, get_database
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -19,8 +23,15 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
+# Set up database dependency
+set_database(db)
+
 # Create the main app without a prefix
-app = FastAPI()
+app = FastAPI(
+    title="CRM Musitech API",
+    description="Authentication and CRM API for Musitech",
+    version="1.0.0"
+)
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
