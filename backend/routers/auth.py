@@ -45,7 +45,7 @@ async def get_current_user(
 @router.post("/login", response_model=Token)
 async def login(
     login_data: UserLogin,
-    db: AsyncIOMotorDatabase = Depends(get_db)
+    db: AsyncIOMotorDatabase = Depends(get_database)
 ):
     """Login user with email and password"""
     auth_service = AuthService(db)
