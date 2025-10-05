@@ -70,8 +70,8 @@ export default function Auth() {
         // Don't fail the login if logging fails
       }
       
-      // The AuthProvider will handle the redirection based on the user's role
-      // So we don't need to handle it here
+      // Redirect after successful login
+      navigate('/dashboard');
       
     } catch (err) {
       console.error('Login error:', err);
