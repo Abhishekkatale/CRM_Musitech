@@ -108,24 +108,55 @@ export const logUserAction = async (
   action: string,
   targetProfileId?: string | null,
   targetClientId?: string | null,
-  details?: any,
+  details: Record<string, any> = {},
   clientIp?: string | null
 ) => {
   try {
     const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : null;
+    
+    // Get the current user's profile ID
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      console.warn('No authenticated user found when logging action');
+      return { error: new Error('Not authenticated') };
+    }
 
-    const { data, error } = await supabase.rpc('log_user_action', {
-      action_type: action,
-      target_profile_id: targetProfileId ?? null,
-      target_client_id: targetClientId ?? null,
-      action_details: details ?? {},
-      client_ip: clientIp ?? null,
-      user_agent_text: userAgent,
-    });
+    // Get the profile ID from the auth user
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('auth_user_id', user.id)
+      .single();
 
-    return { data, error };
+    if (profileError || !profile) {
+      console.error('Error fetching profile for audit log:', profileError);
+      return { error: profileError || new Error('Profile not found') };
+    }
+
+    // Insert directly into audit_logs table instead of using RPC
+    const { data, error } = await supabase
+      .from('audit_logs')
+      .insert({
+        actor_profile_id: profile.id,
+        action: action,
+        target_profile_id: targetProfileId || null,
+        target_client_id: targetClientId || null,
+        details: details || {},
+        ip_address: clientIp || null,
+        user_agent: userAgent,
+        timestamp: new Date().toISOString()
+      })
+      .select();
+
+    if (error) {
+      console.error('Error logging user action:', error);
+      return { error };
+    }
+
+    return { data: data?.[0] };
   } catch (error) {
-    return { error };
+    console.error('Unexpected error in logUserAction:', error);
+    return { error: error instanceof Error ? error : new Error('Failed to log action') };
   }
 };
 

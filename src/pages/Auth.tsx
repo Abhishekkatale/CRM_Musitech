@@ -55,6 +55,8 @@ export default function Auth() {
           errorMessage = 'Invalid email or password. Please try again.';
         } else if (signInError.message.includes('Email not confirmed')) {
           errorMessage = 'Please verify your email before signing in.';
+        } else if (signInError.message.includes('User profile not found')) {
+          errorMessage = 'Authentication successful, but no user profile was found. Please contact your administrator.';
         }
         setError(errorMessage);
         return;
