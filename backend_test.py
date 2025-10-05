@@ -11,7 +11,7 @@ import os
 from datetime import datetime
 
 # Get backend URL from environment
-BACKEND_URL = "https://auth-rescue-2.preview.emergentagent.com/api"
+BACKEND_URL = "http://localhost:8000/api"
 
 class AuthenticationTester:
     def __init__(self):
